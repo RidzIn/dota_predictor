@@ -19,6 +19,7 @@ You have two options
 3. from root folder run command `python main.py read_match --file_name <file_name>`
 4. Parsed data will be stored in the **generated_data** folder
 ---
-* <file_name>.csv - raw format csv file
+* <file_name> - raw format file(do not use it)
+* <file_name> - pos detection format file
 * <file_name>_RESHAPED.pickle - reshaped format DataFrame object(I used pickle because columns of DataFrame contains arrays)
 * heroes_prior.txt - contains preferable positions of each hero, used to sort heroes by position in the game. 
