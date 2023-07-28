@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 def generate_data(tournament_html):
     """
-    Read the tournament HTML file, extract links to finished matches,
+    Read the tournament HTML file, extract links to finished datasets,
     download their HTML, and save it to separate files.
 
     Args:
@@ -23,7 +23,7 @@ def generate_data(tournament_html):
 
     start = 0
     for i in range(len(data)):
-        if "Finished matches" in data[i]:
+        if "Finished datasets" in data[i]:
             start = i
             break
 

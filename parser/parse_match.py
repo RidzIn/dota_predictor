@@ -147,16 +147,16 @@ class MatchParser:
         return str_representation_of_row_in_csv
 
 
-def read_match(file_name_to_save):
+def read_match(file_name_to_save='test'):
     """
-    Read match files from the "parser/matches" directory, process them,
+    Read match files from the "parser/datasets" directory, process them,
     and generate a data files with the extracted data.
 
     Args:
         file_name_to_save (str): The name of the CSV file to be saved.
 
     Raises:
-        FileNotFoundError: If the "parser/matches" directory does not exist.
+        FileNotFoundError: If the "parser/datasets" directory does not exist.
     """
     match_dir = "parser/matches"
     if not os.path.exists(match_dir):
