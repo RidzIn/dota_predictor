@@ -1,7 +1,5 @@
 import json
-
 import pandas as pd
-import xgboost as xgb
 
 
 def read_heroes(filename="data_processing/data/heroes/heroes.txt"):

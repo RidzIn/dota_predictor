@@ -31,3 +31,22 @@ This script is needed to train XGB Model. I have already fine tuned parameters, 
 
 From root folder run command `python main.py train_xgb_model`
 
+---
+
+## Update models feedback
+To boost accuracy, I implemented 'model feedback' algorithm.
+You need to have valid dataset to process through models, then you get statistic where model were wrong. 
+
+For example: model pretty bad predicts sven games,
+so by adding this algorithm prediction will be noticed about this fact, 
+and give more accurate result
+
+Go to source code in case you want to change parameters. 
+
+**Usage**
+
+From root folder run command `python main.py update_models_feedback`
+
+
+
+

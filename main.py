@@ -1,5 +1,6 @@
 import argparse
 
+from data_processing.models_feedback import update_models_feedback
 from data_processing.train_model import evaluate_models, train_xgb_model
 from data_processing.winrates_calculator import update_winrates
 from parser.parse_match import read_match
@@ -12,7 +13,8 @@ def main():
     )
     parser.add_argument(
         "command",
-        choices=["read_tournament", "read_match", "update_winrates", 'evaluate_models', 'train_xgb_model'],
+        choices=["read_tournament", "read_match", "update_winrates", 'evaluate_models', 'train_xgb_model',
+                 'update_models_feedback'],
         help="The command to execute.",
     )
 
@@ -45,6 +47,9 @@ def main():
 
     elif args.command == 'train_xgb_model':
         train_xgb_model()
+
+    elif args.command == 'update_models_feedback':
+        update_models_feedback()
 
 
 if __name__ == "__main__":
