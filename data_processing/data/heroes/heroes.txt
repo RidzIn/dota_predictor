@@ -59,6 +59,7 @@ Mars
 Medusa
 Meepo
 Mirana
+Muerta
 Monkey King
 Morphling
 Naga Siren

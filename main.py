@@ -1,5 +1,6 @@
 import argparse
 
+from data_processing.train_model import evaluate_models, train_xgb_model
 from data_processing.winrates_calculator import update_winrates
 from parser.parse_match import read_match
 from parser.parse_tournament import read_tournament
@@ -11,7 +12,7 @@ def main():
     )
     parser.add_argument(
         "command",
-        choices=["read_tournament", "read_match", "update_winrates"],
+        choices=["read_tournament", "read_match", "update_winrates", 'evaluate_models', 'train_xgb_model'],
         help="The command to execute.",
     )
 
@@ -39,6 +40,11 @@ def main():
             print(
                 "Winrates are updating from default file in data/datasets folder. If you want your own file provide '--file_path' argument")
             update_winrates()
+    elif args.command == 'evaluate_models':
+        evaluate_models()
+
+    elif args.command == 'train_xgb_model':
+        train_xgb_model()
 
 
 if __name__ == "__main__":
