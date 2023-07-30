@@ -13,7 +13,7 @@ st.write("----")
 ## How to use
 1. Insert link to the match from the [Hawk](https://hawk.live/)
 2. Press **predict** button
-3. After this you will see prediction, in the bottom 
+3. After this you will see the prediction, at the bottom 
 ----
 
 ## Prediction format
@@ -39,8 +39,7 @@ To keep this simple, numbers you need to aim for more accurate prediction
 1. Top pick: 0.51<
 2. Bottom pick: 0.49>
 
-Every match of this conditions will count as 1 score, max score is 7. 
-So the higher the score the better. 
+Every match of these conditions will count as 1 point
 """
 
 
