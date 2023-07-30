@@ -165,7 +165,6 @@ def init_hero_pos_priority():
     return {h: [] for h in get_heroes_list()}
 
 
-
 def reshape_pick(pick):
     """
     Reshape the provided "pick" list based on hero priorities and create a new dictionary.

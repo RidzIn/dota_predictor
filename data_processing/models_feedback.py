@@ -253,4 +253,3 @@ def update_models_feedback():
     print('Simple model:')
     save_model_stat(test_df, winrates, model, 'simple_model_stat',
                     min_threshold=0.48, max_threshold=0.52, is_simple=True)
-
