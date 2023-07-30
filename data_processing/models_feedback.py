@@ -15,7 +15,9 @@ MEAN_SIMPLE_PREDICTED = 0.56
 MEAN_SIMPLE_UNPREDICTED = 0.43
 
 
-def get_model_raw_info(df, winrates, model, min_threshold=0.48, max_threshold=0.52, is_simple=True):
+def get_model_raw_info(
+    df, winrates, model, min_threshold=0.48, max_threshold=0.52, is_simple=True
+):
     """
     Evaluates the performance of a model on a test dataset and returns a dictionary of hero picks and predictions.
 
@@ -50,46 +52,53 @@ def get_model_raw_info(df, winrates, model, min_threshold=0.48, max_threshold=0.
 
     for i in range(len(df)):
         if is_simple:
-            team_2_win_prob = get_simple_pred(winrates, df.iloc[i]['TEAM_0_HEROES'],
-                                              df.iloc[i]['TEAM_1_HEROES'])['pick_2']
+            team_2_win_prob = get_simple_pred(
+                winrates, df.iloc[i]["TEAM_0_HEROES"], df.iloc[i]["TEAM_1_HEROES"]
+            )["pick_2"]
         else:
-            team_2_win_prob = get_nn_pred(winrates, model,  df.iloc[i]['TEAM_0_HEROES'],
-                                          df.iloc[i]['TEAM_1_HEROES'])['pick_2']
+            team_2_win_prob = get_nn_pred(
+                winrates,
+                model,
+                df.iloc[i]["TEAM_0_HEROES"],
+                df.iloc[i]["TEAM_1_HEROES"],
+            )["pick_2"]
 
         if team_2_win_prob >= max_threshold or team_2_win_prob <= min_threshold:
             sure += 1
 
-            if team_2_win_prob >= max_threshold and df.iloc[i]['TEAM_1_WIN'] == 1:
+            if team_2_win_prob >= max_threshold and df.iloc[i]["TEAM_1_WIN"] == 1:
                 correct += 1
-                predicted_win_heroes.extend(df.iloc[i]['TEAM_1_HEROES'])
-                unpredicted_lose_heroes.extend(df.iloc[i]['TEAM_0_HEROES'])
+                predicted_win_heroes.extend(df.iloc[i]["TEAM_1_HEROES"])
+                unpredicted_lose_heroes.extend(df.iloc[i]["TEAM_0_HEROES"])
                 prediction_list.append(1)
 
-            elif team_2_win_prob <= min_threshold and df.iloc[i]['TEAM_1_WIN'] == 0:
+            elif team_2_win_prob <= min_threshold and df.iloc[i]["TEAM_1_WIN"] == 0:
                 correct += 1
-                predicted_win_heroes.extend(df.iloc[i]['TEAM_0_HEROES'])
-                unpredicted_lose_heroes.extend(df.iloc[i]['TEAM_1_HEROES'])
+                predicted_win_heroes.extend(df.iloc[i]["TEAM_0_HEROES"])
+                unpredicted_lose_heroes.extend(df.iloc[i]["TEAM_1_HEROES"])
                 prediction_list.append(1)
 
-            elif team_2_win_prob >= max_threshold and df.iloc[i]['TEAM_1_WIN'] == 0:
+            elif team_2_win_prob >= max_threshold and df.iloc[i]["TEAM_1_WIN"] == 0:
                 incorrect += 1
-                predicted_lose_heroes.extend(df.iloc[i]['TEAM_1_HEROES'])
-                unpredicted_win_heroes.extend(df.iloc[i]['TEAM_0_HEROES'])
+                predicted_lose_heroes.extend(df.iloc[i]["TEAM_1_HEROES"])
+                unpredicted_win_heroes.extend(df.iloc[i]["TEAM_0_HEROES"])
                 prediction_list.append(-1)
 
-            elif team_2_win_prob <= min_threshold and df.iloc[i]['TEAM_1_WIN'] == 1:
+            elif team_2_win_prob <= min_threshold and df.iloc[i]["TEAM_1_WIN"] == 1:
                 incorrect += 1
-                predicted_lose_heroes.extend(df.iloc[i]['TEAM_0_HEROES'])
-                unpredicted_win_heroes.extend(df.iloc[i]['TEAM_1_HEROES'])
+                predicted_lose_heroes.extend(df.iloc[i]["TEAM_0_HEROES"])
+                unpredicted_win_heroes.extend(df.iloc[i]["TEAM_1_HEROES"])
                 prediction_list.append(-1)
         else:
             unsure += 1
             prediction_list.append(0)
 
-    return {'predicted_win_heroes': predicted_win_heroes,
-            'predicted_lose_heroes': predicted_lose_heroes,
-            'unpredicted_win_heroes': unpredicted_win_heroes,
-            'unpredicted_lose_heroes': unpredicted_lose_heroes}
+    return {
+        "predicted_win_heroes": predicted_win_heroes,
+        "predicted_lose_heroes": predicted_lose_heroes,
+        "unpredicted_win_heroes": unpredicted_win_heroes,
+        "unpredicted_lose_heroes": unpredicted_lose_heroes,
+    }
 
 
 def get_model_lists(pred_dict):
@@ -110,42 +119,55 @@ def get_model_lists(pred_dict):
     counters = {}
     for key in pred_dict:
         counters[key] = Counter(pred_dict[key])
-    return counters['predicted_win_heroes'], counters['predicted_lose_heroes'], counters['unpredicted_win_heroes'], \
-        counters['unpredicted_lose_heroes']
+    return (
+        counters["predicted_win_heroes"],
+        counters["predicted_lose_heroes"],
+        counters["unpredicted_win_heroes"],
+        counters["unpredicted_lose_heroes"],
+    )
 
 
-def get_model_stat_dict(df, winrates, model, min_threshold=0.48, max_threshold=0.52, is_simple=True):
+def get_model_stat_dict(
+    df, winrates, model, min_threshold=0.48, max_threshold=0.52, is_simple=True
+):
     """
-        Generate a dictionary with statistical information about a model's performance.
+    Generate a dictionary with statistical information about a model's performance.
 
-        Parameters:
-            df (pandas.DataFrame): The dataset to test the model on.
-            winrates (dict): A dictionary with win rates for each hero combination.
-            model: The predictive model to evaluate.
-            min_threshold (float): The minimum threshold for the predicted win rate to be considered "sure".
-            max_threshold (float): The maximum threshold for the predicted win rate to be considered "sure".
-            is_simple (bool): A flag indicating whether the model to evaluate is a simple model or a neural network.
+    Parameters:
+        df (pandas.DataFrame): The dataset to test the model on.
+        winrates (dict): A dictionary with win rates for each hero combination.
+        model: The predictive model to evaluate.
+        min_threshold (float): The minimum threshold for the predicted win rate to be considered "sure".
+        max_threshold (float): The maximum threshold for the predicted win rate to be considered "sure".
+        is_simple (bool): A flag indicating whether the model to evaluate is a simple model or a neural network.
 
-        Returns:
-        A dictionary with the following keys:
-            - 'predicted_winrate': The average win rate predicted by the model for all matches in the dataset.
-            - 'unpredicted_winrate': The average win rate of the matches where the model was not sure about the outcome.
-            - 'correct_predictions': The number of matches where the model's prediction was correct.
-            - 'incorrect_predictions': The number of matches where the model's prediction was incorrect.
-            - 'sure_predictions_ratio': The percentage of matches where the model was sure about the outcome.
-            - 'predicted_win_heroes': A list of heroes that the model predicted would win.
-            - 'predicted_lose_heroes': A list of heroes that the model predicted would lose.
-            - 'unpredicted_win_heroes': A list of heroes from matches where the model was not sure and the team with those heroes won.
-            - 'unpredicted_lose_heroes': A list of heroes from matches where the model was not sure and the team with those heroes lost.
+    Returns:
+    A dictionary with the following keys:
+        - 'predicted_winrate': The average win rate predicted by the model for all matches in the dataset.
+        - 'unpredicted_winrate': The average win rate of the matches where the model was not sure about the outcome.
+        - 'correct_predictions': The number of matches where the model's prediction was correct.
+        - 'incorrect_predictions': The number of matches where the model's prediction was incorrect.
+        - 'sure_predictions_ratio': The percentage of matches where the model was sure about the outcome.
+        - 'predicted_win_heroes': A list of heroes that the model predicted would win.
+        - 'predicted_lose_heroes': A list of heroes that the model predicted would lose.
+        - 'unpredicted_win_heroes': A list of heroes from matches where the model was not sure and the team with those heroes won.
+        - 'unpredicted_lose_heroes': A list of heroes from matches where the model was not sure and the team with those heroes lost.
     """
-    model_raw_info = get_model_raw_info(df, winrates, model, min_threshold, max_threshold, is_simple)
+    model_raw_info = get_model_raw_info(
+        df, winrates, model, min_threshold, max_threshold, is_simple
+    )
 
     model_counts = get_model_lists(model_raw_info)
 
     return model_stat_dict(*model_counts)
 
 
-def model_stat_dict(predicted_win_heroes, predicted_lose_heroes, unpredicted_win_heroes, unpredicted_lose_heroes):
+def model_stat_dict(
+    predicted_win_heroes,
+    predicted_lose_heroes,
+    unpredicted_win_heroes,
+    unpredicted_lose_heroes,
+):
     """
     Generate a dictionary of statistics for each hero in the game.
 
@@ -180,12 +202,12 @@ def model_stat_dict(predicted_win_heroes, predicted_lose_heroes, unpredicted_win
         unpredicted_winrate = round(unpredicted_wins / (total_unpredicted + 0.0001), 2)
 
         prediction_stat_dict[hero] = {
-            'predicted_wins': predicted_wins,
-            'predicted_loses': predicted_loses,
-            'predicted_winrate': predicted_winrate,
-            'unpredicted_wins': unpredicted_wins,
-            'unpredicted_loses': unpredicted_loses,
-            'unpredicted_winrate': unpredicted_winrate
+            "predicted_wins": predicted_wins,
+            "predicted_loses": predicted_loses,
+            "predicted_winrate": predicted_winrate,
+            "unpredicted_wins": unpredicted_wins,
+            "unpredicted_loses": unpredicted_loses,
+            "unpredicted_winrate": unpredicted_winrate,
         }
 
     return prediction_stat_dict
@@ -202,39 +224,53 @@ def show_mean_winrates(prediction_stat_dict):
 
 def get_mean_winrates(prediction_stat_dict):
     """
-        Calculate the mean predicted and unpredicted winrates for all heroes.
+    Calculate the mean predicted and unpredicted winrates for all heroes.
 
-        Args:
-        - prediction_stat_dict (dict): a dictionary with the following structure:
-            {
-                hero_1: {
-                    'predicted_wins': ...,
-                    'predicted_loses': ...,
-                    'predicted_winrate': ...,
-                    'unpredicted_wins': ...,
-                    'unpredicted_loses': ...,
-                    'unpredicted_winrate': ...
-                },
-                hero_2: {
-                    ...
-                },
+    Args:
+    - prediction_stat_dict (dict): a dictionary with the following structure:
+        {
+            hero_1: {
+                'predicted_wins': ...,
+                'predicted_loses': ...,
+                'predicted_winrate': ...,
+                'unpredicted_wins': ...,
+                'unpredicted_loses': ...,
+                'unpredicted_winrate': ...
+            },
+            hero_2: {
                 ...
-            }
+            },
+            ...
+        }
 
-        Returns:
-        - A tuple of two floats, the mean predicted winrate and the mean unpredicted winrate, rounded to two decimal places.
-        """
-    winrates = {'predicted_winrate': [], 'unpredicted_winrate': []}
+    Returns:
+    - A tuple of two floats, the mean predicted winrate and the mean unpredicted winrate, rounded to two decimal places.
+    """
+    winrates = {"predicted_winrate": [], "unpredicted_winrate": []}
     for hero_stats in prediction_stat_dict.values():
-        winrates['predicted_winrate'].append(hero_stats['predicted_winrate'])
-        winrates['unpredicted_winrate'].append(hero_stats['unpredicted_winrate'])
-    predicted_winrate_mean = sum(winrates['predicted_winrate']) / len(winrates['predicted_winrate'])
-    unpredicted_winrate_mean = sum(winrates['unpredicted_winrate']) / len(winrates['unpredicted_winrate'])
+        winrates["predicted_winrate"].append(hero_stats["predicted_winrate"])
+        winrates["unpredicted_winrate"].append(hero_stats["unpredicted_winrate"])
+    predicted_winrate_mean = sum(winrates["predicted_winrate"]) / len(
+        winrates["predicted_winrate"]
+    )
+    unpredicted_winrate_mean = sum(winrates["unpredicted_winrate"]) / len(
+        winrates["unpredicted_winrate"]
+    )
     return round(predicted_winrate_mean, 2), round(unpredicted_winrate_mean, 2)
 
 
-def save_model_stat(df, winrates, model, file_name, min_threshold=0.48, max_threshold=0.52, is_simple=True):
-    temp = get_model_stat_dict(df, winrates, model, min_threshold, max_threshold, is_simple)
+def save_model_stat(
+    df,
+    winrates,
+    model,
+    file_name,
+    min_threshold=0.48,
+    max_threshold=0.52,
+    is_simple=True,
+):
+    temp = get_model_stat_dict(
+        df, winrates, model, min_threshold, max_threshold, is_simple
+    )
     show_mean_winrates(temp)
     with open(f"data_processing/data/models_feedback/{file_name}.json", "w") as outfile:
         json.dump(temp, outfile)
@@ -242,14 +278,28 @@ def save_model_stat(df, winrates, model, file_name, min_threshold=0.48, max_thre
 
 def update_models_feedback():
     """Save some king of model feedback into 'data/models_feedback' folder"""
-    test_df = pd.read_pickle('data_processing/data/datasets/tier_2_2021.pkl')
+    test_df = pd.read_pickle("data_processing/data/datasets/tier_2_2021.pkl")
     winrates = read_winrates()
     model = read_xgb_model()
 
-    print('XGB model:')
-    save_model_stat(test_df, winrates, model, 'xgb_model_stat',
-                    min_threshold=0.15, max_threshold=0.85, is_simple=False)
+    print("XGB model:")
+    save_model_stat(
+        test_df,
+        winrates,
+        model,
+        "xgb_model_stat",
+        min_threshold=0.15,
+        max_threshold=0.85,
+        is_simple=False,
+    )
 
-    print('Simple model:')
-    save_model_stat(test_df, winrates, model, 'simple_model_stat',
-                    min_threshold=0.48, max_threshold=0.52, is_simple=True)
+    print("Simple model:")
+    save_model_stat(
+        test_df,
+        winrates,
+        model,
+        "simple_model_stat",
+        min_threshold=0.48,
+        max_threshold=0.52,
+        is_simple=True,
+    )

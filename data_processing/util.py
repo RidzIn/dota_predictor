@@ -20,26 +20,14 @@ def read_heroes(file_name="data_processing/data/heroes/heroes.txt"):
     return hero_set
 
 
-def read_winrates(file_name='data_processing/data/winrates/winrates.json'):
+def read_winrates(file_name="data_processing/data/winrates/winrates.json"):
     """Return winrates dictionary"""
     f = open(file_name)
     winrates = json.load(f)
     return winrates
 
 
-# def read_heroes_prior(file_name='data_processing/data/heroes/heroes_prior.txt'):
-#     hero_prior_dict = {}
-#     with open(file_name, "r") as f:
-#         lines = f.readlines()
-#     for i in range(len(lines)):
-#         lines[i] = lines[i][:-1]
-#     for i in range(len(lines)):
-#         temp = lines[i].split(" | ")
-#         hero_prior_dict[temp[0]] = json.loads(temp[1])
-#     return hero_prior_dict
-
-
-def read_hero_decoder(file_name='data_processing/data/heroes/heroes_decoder.json'):
+def read_hero_decoder(file_name="data_processing/data/heroes/heroes_decoder.json"):
     """Return hero decoder json object"""
     f = open(file_name)
     decoder = json.load(f)
@@ -47,16 +35,20 @@ def read_hero_decoder(file_name='data_processing/data/heroes/heroes_decoder.json
 
 
 def read_xgb_model():
-    return pd.read_pickle('data_processing/data/models/xgboost_model.pkl')
+    return pd.read_pickle("data_processing/data/models/xgboost_model.pkl")
 
 
-def read_simple_feedback(file_name='data_processing/data/models_feedback/simple_model_stat.json'):
+def read_simple_feedback(
+    file_name="data_processing/data/models_feedback/simple_model_stat.json",
+):
     f = open(file_name)
     feedback = json.load(f)
     return feedback
 
 
-def read_xgb_feedback(file_name='data_processing/data/models_feedback/xgb_model_stat.json'):
+def read_xgb_feedback(
+    file_name="data_processing/data/models_feedback/xgb_model_stat.json",
+):
     f = open(file_name)
     feedback = json.load(f)
     return feedback
@@ -85,10 +77,10 @@ def get_feature_vec(winrates: dict, pick_1: list, pick_2: list) -> list:
     )
 
     return (
-            pick_1_synergy_features
-            + pick_1_duel_features
-            + pick_2_synergy_features
-            + pick_2_duel_features
+        pick_1_synergy_features
+        + pick_1_duel_features
+        + pick_2_synergy_features
+        + pick_2_duel_features
     )
 
 
@@ -193,7 +185,6 @@ def get_heroes_from_hawk(soup):
         elem_tag = elem.get("alt")
         heroes.append(elem_tag)
     return heroes[:10]
-
 
 
 winrates = read_winrates()

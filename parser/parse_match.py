@@ -147,7 +147,7 @@ class MatchParser:
         return str_representation_of_row_in_csv
 
 
-def read_match(file_name_to_save='test'):
+def read_match(file_name_to_save="test"):
     """
     Read match files from the "parser/datasets" directory, process them,
     and generate a data files with the extracted data.

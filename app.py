@@ -70,9 +70,7 @@ heroes = read_heroes()
 
 tab1, tab2 = st.tabs(["Insert Link", "Test yourself"])
 with tab1:
-    """
-
-    """
+    """ """
 
     st.header("Predict")
     """
@@ -84,12 +82,15 @@ with tab1:
         temp_dict = get_hawk_parse(link)
         # print(temp_dict['pick_1']['heroes'])
         # print(type(temp_dict['pick_1']['heroes']))
-        temp_dict["pick_1"]["heroes"] = list(reshape_pick(temp_dict["pick_1"]["heroes"]).values())
-        temp_dict["pick_2"]["heroes"] = list(reshape_pick(temp_dict["pick_2"]["heroes"]).values())
+        temp_dict["pick_1"]["heroes"] = list(
+            reshape_pick(temp_dict["pick_1"]["heroes"]).values()
+        )
+        temp_dict["pick_2"]["heroes"] = list(
+            reshape_pick(temp_dict["pick_2"]["heroes"]).values()
+        )
 
         st.write(
-            get_prediction(temp_dict["pick_1"]["heroes"],
-                           temp_dict["pick_2"]["heroes"])
+            get_prediction(temp_dict["pick_1"]["heroes"], temp_dict["pick_2"]["heroes"])
         )
 
         match_heroes = temp_dict["pick_1"]["heroes"] + temp_dict["pick_2"]["heroes"]

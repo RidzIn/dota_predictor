@@ -9,12 +9,18 @@ from parser.parse_tournament import read_tournament
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Description of your Dota 2 prediction project."
+        description="Scripts for this project"
     )
     parser.add_argument(
         "command",
-        choices=["read_tournament", "read_match", "update_winrates", 'evaluate_models', 'train_xgb_model',
-                 'update_models_feedback'],
+        choices=[
+            "read_tournament",
+            "read_match",
+            "update_winrates",
+            "evaluate_models",
+            "train_xgb_model",
+            "update_models_feedback",
+        ],
         help="The command to execute.",
     )
 
@@ -40,15 +46,16 @@ def main():
             update_winrates(args.file_path)
         else:
             print(
-                "Winrates are updating from default file in data/datasets folder. If you want your own file provide '--file_path' argument")
+                "Winrates are updating from default file in data/datasets folder. If you want your own file provide '--file_path' argument"
+            )
             update_winrates()
-    elif args.command == 'evaluate_models':
+    elif args.command == "evaluate_models":
         evaluate_models()
 
-    elif args.command == 'train_xgb_model':
+    elif args.command == "train_xgb_model":
         train_xgb_model()
 
-    elif args.command == 'update_models_feedback':
+    elif args.command == "update_models_feedback":
         update_models_feedback()
 
 
