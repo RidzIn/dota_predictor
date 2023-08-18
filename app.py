@@ -39,7 +39,18 @@ To keep this simple, numbers you need to aim for more accurate prediction
 1. Top pick: 0.51<
 2. Bottom pick: 0.49>
 
+**Personal**
+
+this one parse team history matches and calculates winrates with formula:
+
+ `0.5 + sum((hero_team_winrate - team_winrate))`
+ 
+1. Top pick: 0<
+2. Bottom pick: 0>
+
+
 Every match of these conditions will count as 1 point
+
 """
 
 
@@ -80,8 +91,6 @@ with tab1:
 
     if st.button("Predict", key=2):
         temp_dict = get_hawk_parse(link)
-        # print(temp_dict['pick_1']['heroes'])
-        # print(type(temp_dict['pick_1']['heroes']))
         temp_dict["pick_1"]["heroes"] = list(
             reshape_pick(temp_dict["pick_1"]["heroes"]).values()
         )
@@ -90,7 +99,10 @@ with tab1:
         )
 
         st.write(
-            get_prediction(temp_dict["pick_1"]["heroes"], temp_dict["pick_2"]["heroes"])
+            get_prediction(temp_dict["pick_1"]["heroes"],
+                           temp_dict["pick_2"]["heroes"],
+                           temp_dict['pick_1']['team'],
+                           temp_dict['pick_2']['team'])[0]
         )
 
         match_heroes = temp_dict["pick_1"]["heroes"] + temp_dict["pick_2"]["heroes"]
@@ -150,7 +162,7 @@ with tab2:
         r5 = st.selectbox("Radiant Position 5", heroes)
 
     if st.button("Predict", key=1):
-        st.write(get_prediction([d1, d2, d3, d4, d5], [r1, r2, r3, r4, r5]))
+        st.write(get_prediction([d1, d2, d3, d4, d5], [r1, r2, r3, r4, r5])[0])
 
         match_heroes = [d1, d2, d3, d4, d5, r1, r2, r3, r4, r5]
         for h in range(len(match_heroes)):
