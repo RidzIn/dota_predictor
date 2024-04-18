@@ -1,6 +1,7 @@
 from joblib import load
 
 from data_processing.util import *
+from parser.util import reshape_pick
 
 
 def get_nn_pred(winrates, model, pick_1, pick_2):
@@ -233,6 +234,36 @@ def print_pick(pick):
         result += "| " + hero + " "
     result += "|"
     return result
+
+
+def get_pick_data(bottom_span, response, heroes_list):
+    pick_data = {'side': None, 'pick': []}
+    pick_raw = response.text[bottom_span: bottom_span + response.text[bottom_span:].find('div class="bans"')]
+
+    pick_data['side'] = 'radiant' if pick_raw.find('radiant') != -1 else 'dire'
+
+    for hero in heroes_list:
+        if pick_raw.find(hero) != -1:
+            pick_data['pick'].append(hero)
+    pick_data['pick'] = list(reshape_pick(pick_data['pick']).values())
+    return pick_data
+
+
+def get_parsed_data(match_link):
+    response = requests.get(match_link)
+    dire_span = response.text.find('<div class="picks__new-picks__picks dire">')
+    radiant_span = response.text.find('<div class="picks__new-picks__picks radiant">')
+    first_span = (dire_span, radiant_span) if dire_span < radiant_span else (radiant_span, dire_span)
+
+    heroes_list = []
+
+    with open('parser/heroes.txt') as heroes:
+        for line in heroes:
+            heroes_list.append(line.strip())
+
+    temp_1 = get_pick_data(first_span[0], response, heroes_list)
+    temp_2 = get_pick_data(first_span[1], response, heroes_list)
+    return (temp_1, temp_2) if temp_1['side'] == 'radiant' else (temp_2, temp_1)
 
 
 winrates = pd.read_json('data_processing/data/winrates/winrates.json')

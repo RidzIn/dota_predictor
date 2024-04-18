@@ -1,11 +1,10 @@
 import streamlit as st
 from data_processing.util import (
     read_heroes,
-    get_hawk_parse,
     get_hero_performance,
 )
 from parser.util import reshape_pick
-from data_processing.predict import get_prediction
+from data_processing.predict import get_prediction, get_parsed_data
 
 st.title("Dota 2 pick predictor")
 st.write("----")
@@ -58,8 +57,8 @@ def print_hero_metric(index):
     st.sidebar.header(match_heroes[index])
     hero_perf = get_hero_performance(
         match_heroes[index],
-        temp_dict["pick_1"]["heroes"],
-        temp_dict["pick_2"]["heroes"],
+        temp_dict[0]["pick"],
+        temp_dict[1]["pick"],
     )[match_heroes[index]]
 
     with_perf = round(hero_perf["with"] * 100, 2)
@@ -90,31 +89,25 @@ with tab1:
     link = st.text_input("**Insert match link from [Hawk](https://hawk.live/)**")
 
     if st.button("Predict", key=2):
-        temp_dict = get_hawk_parse(link)
-        temp_dict["pick_1"]["heroes"] = list(
-            reshape_pick(temp_dict["pick_1"]["heroes"]).values()
-        )
-        temp_dict["pick_2"]["heroes"] = list(
-            reshape_pick(temp_dict["pick_2"]["heroes"]).values()
-        )
-
+        temp_dict = get_parsed_data(link)
+        print(temp_dict)
         st.write(
-            get_prediction(temp_dict["pick_1"]["heroes"],
-                           temp_dict["pick_2"]["heroes"],
-                           temp_dict['pick_1']['team'],
-                           temp_dict['pick_2']['team'])[0]
+            get_prediction(temp_dict[0]["pick"],
+                           temp_dict[1]["pick"],
+                           temp_dict[0]['side'],
+                           temp_dict[1]['side'])[0]
         )
 
-        match_heroes = temp_dict["pick_1"]["heroes"] + temp_dict["pick_2"]["heroes"]
+        match_heroes = temp_dict[0]["pick"] + temp_dict[1]["pick"]
 
         for h in range(len(match_heroes)):
             if h == 0:
                 st.sidebar.write("----")
-                st.sidebar.title(temp_dict["pick_1"]["team"])
+                st.sidebar.title(temp_dict[0]["side"])
                 st.sidebar.write("----")
             if h == 5:
                 st.sidebar.write("----")
-                st.sidebar.title(temp_dict["pick_2"]["team"])
+                st.sidebar.title(temp_dict[1]["side"])
                 st.sidebar.write("----")
             print_hero_metric(h)
 

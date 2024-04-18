@@ -2,6 +2,7 @@ import os
 import time
 
 import pandas as pd
+import requests
 from tqdm import tqdm
 
 from parser.util import pos_reshape_csv
@@ -10,9 +11,16 @@ MATCH_COUNT = 0
 
 
 class MatchParser:
-    def __init__(self, match_file_path):
-        with open(match_file_path, encoding="utf-8") as match_file:
-            self.data_match = match_file.readlines()
+    def __init__(self, match_file_path=None, match_link=None):
+        if match_file_path is not None:
+            with open(match_file_path, encoding="utf-8") as match_file:
+                self.data_match = match_file.readlines()
+        else:
+            response = requests.get(match_link)
+            temp = response.text
+            self.data_match = temp.splitlines()
+
+            print(len(self.data_match))
 
     def _get_score_list(self):
         """Parse the scores from HTML file and return a list of them."""
@@ -28,7 +36,7 @@ class MatchParser:
         score = [i.strip() for i in dirty_score]
         return score
 
-    def _get_heroes_list(self):
+    def get_heroes_list(self):
         """Parse the heroes from HTML file and return a list of them."""
         dirty_data = [
             i
@@ -116,7 +124,7 @@ class MatchParser:
         side_list = self._get_side_list()
         duration_list = self._get_duration_list()
         score_list = self._get_score_list()
-        heroes_list = self._get_heroes_list()
+        heroes_list = self.get_heroes_list()
         self.tournament_and_teams = self._get_tournament_and_teams()
 
         for i in range(1, len(results) + 1):

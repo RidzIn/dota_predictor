@@ -8,10 +8,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from selenium import webdriver
-from selenium.webdriver.edge.options import Options
-
-
 
 def read_heroes(file_name="data_processing/data/heroes/heroes.txt"):
     """
@@ -155,47 +151,8 @@ def get_hero_matchups(hero_name, pick):
     return temp_df
 
 
-def get_hawk_parse(link):
-    options = Options()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-
-    driver = webdriver.Edge(options=options)
-    driver.get(link)
-
-    wait = WebDriverWait(driver, 10)
-    wait.until(EC.presence_of_element_located((By.CLASS_NAME, "match-layout")))
-
-    soup = BeautifulSoup(driver.page_source, "html.parser")
-    heroes = get_heroes_from_hawk(soup)
-    if "Outworld Destroyer" in heroes:
-        index = heroes.index("Outworld Destroyer")
-        heroes[index] = "Outworld Devourer"
-    teams = get_team_names_from_hawk(soup)
-
-    return {
-        "pick_1": {"team": teams[0], "heroes": heroes[:5]},
-        "pick_2": {"team": teams[1], "heroes": heroes[5:]},
-    }
-
-
-def get_team_names_from_hawk(soup):
-    elements = soup.select('[class*="series-teams-item__name"]')
-
-    return elements[0].text, elements[1].text
-
-
-def get_heroes_from_hawk(soup):
-    elements = soup.select('[class*="match-view-draft-team__hero-image"]')
-
-    heroes = []
-    for elem in elements:
-        elem_tag = elem.get("alt")
-        heroes.append(elem_tag)
-    return heroes[:10]
-
-
 winrates = pd.read_json('data_processing/data/winrates/winrates.json')
+
 
 
 def get_hero_performance(hero, pick_1, pick_2):
