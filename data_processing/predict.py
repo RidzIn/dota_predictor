@@ -3,16 +3,6 @@ from joblib import load
 from data_processing.util import *
 
 
-from selenium import webdriver
-from selenium.webdriver.edge.options import Options
-
-options = Options()
-options.add_argument('--headless')
-options.add_argument('--disable-gpu')
-
-driver = webdriver.Edge(options=options)
-
-
 def get_nn_pred(winrates, model, pick_1, pick_2):
     """
     Using fine tuned XGBBoost classifier model returns dictionary {pick_1: <probability>, 'pick_2': <probability>}

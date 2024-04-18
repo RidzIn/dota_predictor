@@ -8,6 +8,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from selenium import webdriver
+from selenium.webdriver.edge.options import Options
+
+
 
 def read_heroes(file_name="data_processing/data/heroes/heroes.txt"):
     """
@@ -152,7 +156,11 @@ def get_hero_matchups(hero_name, pick):
 
 
 def get_hawk_parse(link):
-    driver = webdriver.Edge()
+    options = Options()
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+
+    driver = webdriver.Edge(options=options)
     driver.get(link)
 
     wait = WebDriverWait(driver, 10)
