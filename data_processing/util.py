@@ -152,7 +152,7 @@ def get_hero_matchups(hero_name, pick):
 
 
 def get_hawk_parse(link):
-    driver = webdriver.Chrome()
+    driver = webdriver.Edge()
     driver.get(link)
 
     wait = WebDriverWait(driver, 10)
@@ -187,7 +187,7 @@ def get_heroes_from_hawk(soup):
     return heroes[:10]
 
 
-winrates = read_winrates()
+winrates = pd.read_json('data_processing/data/winrates/winrates.json')
 
 
 def get_hero_performance(hero, pick_1, pick_2):

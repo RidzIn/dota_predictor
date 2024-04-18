@@ -5,13 +5,13 @@ import xgboost as xgb
 from data_processing.predict import get_simple_pred, get_nn_pred
 from data_processing.util import read_winrates, get_feature_vec, read_xgb_model
 
-SIMPLE_THRESHOLD = 0.52
-XGB_THRESHOLD = 0.8
-train_df = pd.read_pickle("data_processing/data/datasets/tier_1_RESHAPED.pickle")
-test_df = pd.read_pickle("data_processing/data/datasets/tier_2_2021.pkl")
-valid_df = pd.read_pickle("data_processing/data/datasets/riyadh_RESHAPED.pickle")
+# SIMPLE_THRESHOLD = 0.52
+# XGB_THRESHOLD = 0.8
+# train_df = pd.read_pickle("data_processing/data/datasets/tier_1_RESHAPED.pickle")
+# test_df = pd.read_pickle("data_processing/data/datasets/tier_2_2021.pkl")
+# valid_df = pd.read_pickle("data_processing/data/datasets/riyadh_RESHAPED.pickle")
 
-winrates = read_winrates()
+# winrates = read_winrates()
 xgb_classifier = read_xgb_model()
 
 
@@ -28,7 +28,8 @@ def get_picks_result(df):
     return result
 
 
-def get_vector_result(df):
+def get_vector_result(df, winrates=None):
+    winrates = read_winrates(winrates)
     X, y = [], []
     for i in range(len(df)):
         X.append(

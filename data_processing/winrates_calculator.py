@@ -117,12 +117,14 @@ def get_updated_winrates_dict(df):
     return result
 
 
-def save_winrates(winrates_dict):
+def save_winrates(winrates_dict, file_name):
     """Save winrates to 'winrates' folder"""
-    with open("data_processing/data/winrates/winrates.json", "w") as outfile:
+    with open(f"data_processing/data/winrates/{file_name}.json", "w") as outfile:
         json.dump(winrates_dict, outfile)
 
 
-def update_winrates(file_path="data_processing/data/datasets/tier_1_RESHAPED.pickle"):
-    df = pd.read_pickle(file_path)
-    save_winrates(get_updated_winrates_dict(df))
+def update_winrates(file_path="data_processing/data/datasets/tier_1_RESHAPED.pickle", df=None, winrates_file_name='winrates'):
+    print(MIN_MATCHUPS)
+    if df is None:
+        df = pd.read_pickle(file_path)
+    save_winrates(get_updated_winrates_dict(df), winrates_file_name)

@@ -276,30 +276,30 @@ def save_model_stat(
         json.dump(temp, outfile)
 
 
-def update_models_feedback():
+def update_models_feedback(df, winrates, model_1, model_2):
     """Save some king of model feedback into 'data/models_feedback' folder"""
-    test_df = pd.read_pickle("data_processing/data/datasets/tier_2_2021.pkl")
-    winrates = read_winrates()
-    model = read_xgb_model()
+    # test_df = pd.read_pickle("data_processing/data/datasets/tier_2_2021.pkl")
+    # winrates = read_winrates()
+    # model = read_xgb_model()
 
     print("XGB model:")
     save_model_stat(
-        test_df,
+        df,
         winrates,
-        model,
+        model_1,
         "xgb_model_stat",
-        min_threshold=0.15,
-        max_threshold=0.85,
+        min_threshold=0.20,
+        max_threshold=0.80,
         is_simple=False,
     )
 
-    print("Simple model:")
+    print("RF model:")
     save_model_stat(
-        test_df,
+        df,
         winrates,
-        model,
-        "simple_model_stat",
-        min_threshold=0.48,
-        max_threshold=0.52,
-        is_simple=True,
+        model_2,
+        "rf_model_stat",
+        min_threshold=0.35,
+        max_threshold=0.65,
+        is_simple=False,
     )

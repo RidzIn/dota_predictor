@@ -1,19 +1,6 @@
+from joblib import load
+
 from data_processing.util import *
-
-
-def get_simple_pred(winrates: dict, pick_1: list, pick_2: list) -> dict:
-    """
-    Algorithm to get 'simple' prediction, based on calculation winrates of heroes.
-    Returns dictionary {pick_1: <probability>, 'pick_2': <probability>}
-    """
-    vec = get_feature_vec(winrates, pick_1, pick_2)
-    pick_1_score = sum(vec[:40])
-    pick_2_score = sum(vec[40:])
-
-    return {
-        "pick_1": round(pick_1_score / (pick_2_score + pick_1_score), 3),
-        "pick_2": round(pick_2_score / (pick_2_score + pick_1_score), 3),
-    }
 
 
 def get_nn_pred(winrates, model, pick_1, pick_2):
@@ -25,19 +12,20 @@ def get_nn_pred(winrates, model, pick_1, pick_2):
     return {"pick_1": round(pred[0][0], 2), "pick_2": round(pred[0][1], 2)}
 
 
-def get_row_prediction(winrates, model, pick_1, pick_2):
+def get_row_prediction(winrates, xgb, rf, pick_1, pick_2):
     """Return models prediction without any additional  checkers"""
     return {
-        "simple": get_simple_pred(winrates, pick_1, pick_2),
-        "xgb": get_nn_pred(winrates, model, pick_1, pick_2),
+        "rf":  get_nn_pred(winrates, rf, pick_1, pick_2),
+        "xgb": get_nn_pred(winrates, xgb, pick_1, pick_2),
     }
 
 
 def get_feedback_prediction(
-        winrates, simple_feedback, xgb_feedback, model, pick_1, pick_2
+        winrates, rf_feedback, xgb_feedback, rf, xgb, pick_1, pick_2
 ):
-    result = {"simple": 0, "xgb": 0}
-    prediction = get_row_prediction(winrates, model, pick_1, pick_2)
+    result = {"rf": 0, "xgb": 0}
+
+    prediction = get_row_prediction(winrates, xgb, rf,  pick_1, pick_2)
     for m in prediction.keys():
         if prediction[m]["pick_1"] > prediction[m]["pick_2"]:
             predicted_pick = pick_1
@@ -48,15 +36,15 @@ def get_feedback_prediction(
 
         predicted_winrate = 0
         for hero in predicted_pick:
-            if m == "simple":
-                predicted_winrate += simple_feedback[hero]["predicted_winrate"]
+            if m == "rf":
+                predicted_winrate += rf_feedback[hero]["predicted_winrate"]
             else:
                 predicted_winrate += xgb_feedback[hero]["predicted_winrate"]
 
         unpredicted_winrate = 0
         for hero in unpredicted_pick:
-            if m == "simple":
-                unpredicted_winrate += simple_feedback[hero]["unpredicted_winrate"]
+            if m == "rf":
+                unpredicted_winrate += rf_feedback[hero]["unpredicted_winrate"]
             else:
                 unpredicted_winrate += xgb_feedback[hero]["unpredicted_winrate"]
 
@@ -132,10 +120,10 @@ def get_personal_pick_winrates(pick, team):
 
 
 hyper_params = {
-    "simple_row_threshold": 0.52,
+    "rf_row_threshold": 0.65,
     "xgb_row_threshold": 0.80,
-    "predicted_feedback_threshold": 0.55,
-    "unpredicted_feedback_threshold": 0.45,
+    "predicted_feedback_threshold": 0.54,
+    "unpredicted_feedback_threshold": 0.46,
     "meta_threshold": 0.51,
 }
 
@@ -143,27 +131,22 @@ hyper_params = {
 def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     scores = 0
 
-    row_prediction = get_row_prediction(winrates, model, pick_1, pick_2)
-    # if (
-    #         row_prediction["simple"]["pick_1"] > 0.50 > row_prediction["xgb"]["pick_1"]
-    #         or row_prediction["simple"]["pick_1"] < 0.50 < row_prediction["xgb"]["pick_1"]
-    # ):
-    #     return "unpredictable"
+    row_prediction = get_row_prediction(winrates, xgb_model, rf_model, pick_1, pick_2)
 
-    predicted_pick = pick_1 if row_prediction["simple"]["pick_1"] > 0.50 else pick_2
-    predicted_team = team_1 if row_prediction['simple']['pick_1'] > 0.50 else team_2
-    unpredicted_pick = pick_2 if row_prediction["simple"]["pick_1"] > 0.50 else pick_1
-    unpredicted_team = team_2 if row_prediction['simple']['pick_1'] > 0.50 else team_1
+    predicted_pick = pick_1 if row_prediction["rf"]["pick_1"] > 0.50 else pick_2
+    predicted_team = team_1 if row_prediction['rf']['pick_1'] > 0.50 else team_2
+    unpredicted_pick = pick_2 if row_prediction["rf"]["pick_1"] > 0.50 else pick_1
+    unpredicted_team = team_2 if row_prediction['rf']['pick_1'] > 0.50 else team_1
     predicted_pick_str = (
-        "pick_1" if row_prediction["simple"]["pick_1"] > 0.50 else "pick_2"
+        "pick_1" if row_prediction["rf"]["pick_1"] > 0.50 else "pick_2"
     )
     unpredicted_pick_str = (
-        "pick_2" if row_prediction["simple"]["pick_1"] > 0.50 else "pick_1"
+        "pick_2" if row_prediction["rf"]["pick_1"] > 0.50 else "pick_1"
     )
 
     if (
-            row_prediction["simple"]["pick_1"] >= hyper_params["simple_row_threshold"]
-            or row_prediction["simple"]["pick_2"] >= hyper_params["simple_row_threshold"]
+            row_prediction["rf"]["pick_1"] >= hyper_params["rf_row_threshold"]
+            or row_prediction["rf"]["pick_2"] >= hyper_params["rf_row_threshold"]
     ):
         scores += 1
 
@@ -174,17 +157,16 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
         scores += 1
 
     feedback_prediction = get_feedback_prediction(
-        winrates, simple_feedback, xgb_feedback, model, pick_1, pick_2
-    )
+        winrates, rf_feedback, xgb_feedback, rf_model, xgb_model, pick_1, pick_2)
 
     if (
-            feedback_prediction["simple"]["predicted_winrate"]
+            feedback_prediction["rf"]["predicted_winrate"]
             >= hyper_params["predicted_feedback_threshold"]
     ):
         scores += 1
 
     if (
-            feedback_prediction["simple"]["unpredicted_winrate"]
+            feedback_prediction["rf"]["unpredicted_winrate"]
             <= hyper_params["unpredicted_feedback_threshold"]
     ):
         scores += 1
@@ -206,10 +188,11 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
         scores += 1
 
     result = "\t\t"
+    result += f"{predicted_team} |"
     result += print_pick(predicted_pick)
-    result += f"\n\n\t| Simple Raw: {row_prediction['simple'][predicted_pick_str]} "
+    result += f"\n\n\t| RF Raw: {row_prediction['rf'][predicted_pick_str]} "
     result += (
-        f"\n\n\t| Simple Feedback: {feedback_prediction['simple']['predicted_winrate']}"
+        f"\n\n\t| RF Feedback: {feedback_prediction['rf']['predicted_winrate']}"
     )
     result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][predicted_pick_str]:.2f}"
     result += f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['predicted_winrate']}"
@@ -220,9 +203,10 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
         pass
 
     result += "\n\n"
+    result += f"{unpredicted_team} |"
     result += print_pick(unpredicted_pick)
-    result += f"\n\n\t| Simple Raw: {row_prediction['simple'][unpredicted_pick_str]}"
-    result += f"\n\n\t| Simple Feedback: {feedback_prediction['simple']['unpredicted_winrate']}"
+    result += f"\n\n\t| RF Raw: {row_prediction['rf'][unpredicted_pick_str]}"
+    result += f"\n\n\t| Simple Feedback: {feedback_prediction['rf']['unpredicted_winrate']}"
     result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][unpredicted_pick_str]:.2f}"
     result += (
         f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['unpredicted_winrate']:.2f}"
@@ -251,7 +235,8 @@ def print_pick(pick):
     return result
 
 
-winrates = read_winrates()
-simple_feedback = read_simple_feedback()
-xgb_feedback = read_xgb_feedback()
-model = read_xgb_model()
+winrates = pd.read_json('data_processing/data/winrates/winrates.json')
+rf_feedback = pd.read_json('data_processing/data/models_feedback/rf_model_stat.json')
+xgb_feedback = pd.read_json('data_processing/data/models_feedback/xgb_model_stat.json')
+xgb_model = load('data_processing/data/models/xgb_boost_model.joblib')
+rf_model = load('data_processing/data/models/random_forest_model.joblib')

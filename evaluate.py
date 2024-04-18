@@ -2,8 +2,8 @@ import pandas as pd
 from tqdm import tqdm
 
 from data_processing.predict import *
-
-valid_df = pd.read_pickle('data_processing/data/datasets/riyadh_RESHAPED.pickle')
+#
+# valid_df = pd.read_pickle('data_processing/data/datasets/riyadh_RESHAPED.pickle')
 
 
 def evaluate(df):

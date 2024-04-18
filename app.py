@@ -19,21 +19,21 @@ st.write("----")
 ## Prediction format
 To keep this simple, numbers you need to aim for more accurate prediction
 
-**Simple Raw:**
-1. Top pick: 0.52<
-2. Bottom pick: 0.48>
+**RF Raw:**
+1. Top pick: 0.65<
+2. Bottom pick: 0.45>
 
-**Simple Feedback:** 
+**RF Feedback:** 
 1. Top pick: 0.55<
-2. Bottom pick: 0.44>
+2. Bottom pick: 0.46>
 
 **XGB Raw:**
 1. Top pick: 0.80<
 2. Bottom pick: 0.20>
 
 **XGB Feedback:**
-1. Top pick: 0.55<
-2. Bottom pick: 0.44>
+1. Top pick: 0.53<
+2. Bottom pick: 0.47>
 
 **Meta:**
 1. Top pick: 0.51<
