@@ -67,57 +67,57 @@ def get_meta_prediction(pick_1, pick_2):
     return {"pick_1": team_1_win_prob, "pick_2": 1 - team_1_win_prob}
 
 
-def get_json(team):
-    response = requests.get(f'https://dltv.org/api/v1/teams/{team}/stats')
-    return response.json()
-
-
-def get_decoder(data):
-    result = {}
-    for _, hero in data['heroes'].items():
-        result.update({hero['title']: hero['id']})
-    return result
-
-
-def decode_pick(pick, data):
-    decoder = get_decoder(data)
-    result = []
-    for hero in pick:
-        result.append(decoder[hero])
-    return result
-
-
-def reformat_team_name(team: str):
-    if team.lower() == 'nigma galaxy':
-        return 'nigma'
-    if team.lower() == 'level up':
-        return 'lvlup'
-    return team.lower().replace(' ', '')
-
-
-def get_personal_pick_winrates(pick, team):
-    team = reformat_team_name(team)
-    result = {}
-    data = get_json(team)
-    decoded_pick = decode_pick(pick, data)
-    i = 0
-    for hero in pick:
-        for row in data['stats']:
-            try:
-                if row['hero_id'] == decoded_pick[i]:
-                    if row['maps_total'] >= 3:
-                        result.update({hero: round(row['wins_total'] / (row['maps_total'] + 0.0001), 2)})
-                    else:
-                        result.update({hero: 0.5})
-            except KeyError as e:
-                pass
-        i += 1
-    avg_winrate = 0
-    team_winrate = round(data['stats'][0]['wins_total'] / (data['stats'][0]['maps_total'] + 0.0001), 2)
-    for hero_winrate in result.values():
-        avg_winrate += hero_winrate - team_winrate
-    result.update({'avg_winrate': round(0.5 + avg_winrate, 2)})
-    return result
+# def get_json(team):
+#     response = requests.get(f'https://dltv.org/api/v1/teams/{team}/stats')
+#     return response.json()
+#
+#
+# def get_decoder(data):
+#     result = {}
+#     for _, hero in data['heroes'].items():
+#         result.update({hero['title']: hero['id']})
+#     return result
+#
+#
+# def decode_pick(pick, data):
+#     decoder = get_decoder(data)
+#     result = []
+#     for hero in pick:
+#         result.append(decoder[hero])
+#     return result
+#
+#
+# def reformat_team_name(team: str):
+#     if team.lower() == 'nigma galaxy':
+#         return 'nigma'
+#     if team.lower() == 'level up':
+#         return 'lvlup'
+#     return team.lower().replace(' ', '')
+#
+#
+# def get_personal_pick_winrates(pick, team):
+#     team = reformat_team_name(team)
+#     result = {}
+#     data = get_json(team)
+#     decoded_pick = decode_pick(pick, data)
+#     i = 0
+#     for hero in pick:
+#         for row in data['stats']:
+#             try:
+#                 if row['hero_id'] == decoded_pick[i]:
+#                     if row['maps_total'] >= 3:
+#                         result.update({hero: round(row['wins_total'] / (row['maps_total'] + 0.0001), 2)})
+#                     else:
+#                         result.update({hero: 0.5})
+#             except KeyError as e:
+#                 pass
+#         i += 1
+#     avg_winrate = 0
+#     team_winrate = round(data['stats'][0]['wins_total'] / (data['stats'][0]['maps_total'] + 0.0001), 2)
+#     for hero_winrate in result.values():
+#         avg_winrate += hero_winrate - team_winrate
+#     result.update({'avg_winrate': round(0.5 + avg_winrate, 2)})
+#     return result
 
 
 hyper_params = {
@@ -138,6 +138,7 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     predicted_team = team_1 if row_prediction['rf']['pick_1'] > 0.50 else team_2
     unpredicted_pick = pick_2 if row_prediction["rf"]["pick_1"] > 0.50 else pick_1
     unpredicted_team = team_2 if row_prediction['rf']['pick_1'] > 0.50 else team_1
+
     predicted_pick_str = (
         "pick_1" if row_prediction["rf"]["pick_1"] > 0.50 else "pick_2"
     )
@@ -188,44 +189,30 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     if meta_prediction[predicted_pick_str] >= hyper_params["meta_threshold"]:
         scores += 1
 
-    result = "\t\t"
-    result += f"{predicted_team} |"
-    result += print_pick(predicted_pick)
-    result += f"\n\n\t| RF Raw: {row_prediction['rf'][predicted_pick_str]} "
-    result += (
+    predicted_result = "\t\t"
+    predicted_result += f"\n\n\t| RF Raw: {row_prediction['rf'][predicted_pick_str]} "
+    predicted_result += (
         f"\n\n\t| RF Feedback: {feedback_prediction['rf']['predicted_winrate']}"
     )
-    result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][predicted_pick_str]:.2f}"
-    result += f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['predicted_winrate']}"
-    result += f"\n\n\t| Meta: {meta_prediction[predicted_pick_str]}"
-    try:
-        result += f"\n\n\t| Personal: {get_personal_pick_winrates(predicted_pick, predicted_team)}"
-    except Exception as e:
-        pass
+    predicted_result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][predicted_pick_str]:.2f}"
+    predicted_result += f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['predicted_winrate']}"
+    predicted_result += f"\n\n\t| Meta: {meta_prediction[predicted_pick_str]}"
 
-    result += "\n\n"
-    result += f"{unpredicted_team} |"
-    result += print_pick(unpredicted_pick)
-    result += f"\n\n\t| RF Raw: {row_prediction['rf'][unpredicted_pick_str]}"
-    result += f"\n\n\t| Simple Feedback: {feedback_prediction['rf']['unpredicted_winrate']}"
-    result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][unpredicted_pick_str]:.2f}"
-    result += (
+
+    unpredicted_result = "\t\t"
+    unpredicted_result += f"{unpredicted_team} |"
+    unpredicted_result += print_pick(unpredicted_pick)
+    unpredicted_result += f"\n\n\t| RF Raw: {row_prediction['rf'][unpredicted_pick_str]}"
+    unpredicted_result += f"\n\n\t| RF Feedback: {feedback_prediction['rf']['unpredicted_winrate']}"
+    unpredicted_result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][unpredicted_pick_str]:.2f}"
+    unpredicted_result += (
         f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['unpredicted_winrate']:.2f}"
     )
-    result += f"\n\n\t| Meta: {meta_prediction[unpredicted_pick_str]}"
-    try:
-        result += f"\n\n\t| Personal: {get_personal_pick_winrates(unpredicted_pick, unpredicted_team)}"
-    except Exception as e:
-        pass
-    result += f"\n\nTotal scores: {scores}/8"
-    try:
-        if get_personal_pick_winrates(predicted_pick, predicted_team)['avg_winrate'] > \
-                get_personal_pick_winrates(unpredicted_pick, unpredicted_team)['avg_winrate']:
-            scores += 1
-    except Exception as e:
-        pass
+    unpredicted_result += f"\n\n\t| Meta: {meta_prediction[unpredicted_pick_str]}"
 
-    return result, {'pick': predicted_pick, 'scores': scores}
+
+    return {'pred_result': predicted_result, 'unpred_result': unpredicted_result, 'scores': scores,
+            'predicted_pick': predicted_pick, 'pred_team': predicted_team}
 
 
 def print_pick(pick):
@@ -237,7 +224,8 @@ def print_pick(pick):
 
 
 def get_pick_data(bottom_span, response, heroes_list):
-    pick_data = {'side': None, 'pick': []}
+    pick_data = {'side': None, 'pick': [], 'team': None}
+
     pick_raw = response.text[bottom_span: bottom_span + response.text[bottom_span:].find('div class="bans"')]
 
     pick_data['side'] = 'radiant' if pick_raw.find('radiant') != -1 else 'dire'
@@ -251,6 +239,8 @@ def get_pick_data(bottom_span, response, heroes_list):
 
 def get_parsed_data(match_link):
     response = requests.get(match_link)
+    teams = get_teams(response)
+
     dire_span = response.text.find('<div class="picks__new-picks__picks dire">')
     radiant_span = response.text.find('<div class="picks__new-picks__picks radiant">')
     first_span = (dire_span, radiant_span) if dire_span < radiant_span else (radiant_span, dire_span)
@@ -262,8 +252,25 @@ def get_parsed_data(match_link):
             heroes_list.append(line.strip())
 
     temp_1 = get_pick_data(first_span[0], response, heroes_list)
+    temp_1['team'] = teams['team_1']
     temp_2 = get_pick_data(first_span[1], response, heroes_list)
+    temp_2['team'] = teams['team_2']
+
     return (temp_1, temp_2) if temp_1['side'] == 'radiant' else (temp_2, temp_1)
+
+
+def get_teams(response):
+    bottom_span = response.text.find('picks__new-picks')
+    top_span = response.text.find('picks__new-plus__placeholder')
+    span = response.text[bottom_span:top_span]
+    id_1 = span.find('https://dltv.org/teams/')
+    team_1 = span[id_1:id_1 + 100].split('"')[0]
+
+    id_2 = span[id_1 + 100:].find('https://dltv.org/teams/')
+    team_2 = span[id_1 + 100 + id_2: id_1 + id_2 + 500].split('"')[0]
+    team_1 = team_1.split("/")[-1]
+    team_2 = team_2.split("/")[-1]
+    return {'team_1': team_1, 'team_2': team_2}
 
 
 winrates = pd.read_json('data_processing/data/winrates/winrates.json')

@@ -10,7 +10,7 @@ st.title("Dota 2 pick predictor")
 st.write("----")
 """
 ## How to use
-1. Insert link to the match from the [Hawk](https://hawk.live/)
+1. Insert link to the match from the [DLTV](https://dltv.org/)
 2. Press **predict** button
 3. After this you will see the prediction, at the bottom 
 ----
@@ -37,15 +37,6 @@ To keep this simple, numbers you need to aim for more accurate prediction
 **Meta:**
 1. Top pick: 0.51<
 2. Bottom pick: 0.49>
-
-**Personal**
-
-this one parse team history matches and calculates winrates with formula:
-
- `0.5 + sum((hero_team_winrate - team_winrate))`
- 
-1. Top pick: 0<
-2. Bottom pick: 0>
 
 
 Every match of these conditions will count as 1 point
@@ -86,28 +77,32 @@ with tab1:
     """
     ----
     """
-    link = st.text_input("**Insert match link from [Hawk](https://hawk.live/)**")
+    link = st.text_input("**Insert match link from [DLTV.ORG](https://dltv.org//)**")
 
     if st.button("Predict", key=2):
         temp_dict = get_parsed_data(link)
-        print(temp_dict)
-        st.write(
-            get_prediction(temp_dict[0]["pick"],
-                           temp_dict[1]["pick"],
-                           temp_dict[0]['side'],
-                           temp_dict[1]['side'])[0]
-        )
 
+        pred = get_prediction(temp_dict[0]["pick"],
+                              temp_dict[1]["pick"],
+                              temp_dict[0]['team'],
+                              temp_dict[1]['team'])
+
+        st.header(f"{pred['pred_team']}")
+        st.write(f"{pred['predicted_pick']}")
+        st.write('----')
+        st.markdown(f' {pred["pred_result"]}')
+        st.write('----')
+        st.header(f'Total scores: {pred["scores"]}')
         match_heroes = temp_dict[0]["pick"] + temp_dict[1]["pick"]
 
         for h in range(len(match_heroes)):
             if h == 0:
                 st.sidebar.write("----")
-                st.sidebar.title(temp_dict[0]["side"])
+                st.sidebar.title(temp_dict[0]["team"])
                 st.sidebar.write("----")
             if h == 5:
                 st.sidebar.write("----")
-                st.sidebar.title(temp_dict[1]["side"])
+                st.sidebar.title(temp_dict[1]["team"])
                 st.sidebar.write("----")
             print_hero_metric(h)
 

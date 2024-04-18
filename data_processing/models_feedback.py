@@ -1,10 +1,8 @@
 import json
 from collections import Counter
 
-import pandas as pd
+from data_processing.predict import get_nn_pred
 
-from data_processing.predict import get_simple_pred, get_nn_pred
-from data_processing.util import read_winrates, read_xgb_model
 
 MEAN_XGB_PREDICTED = 0.55
 
@@ -16,7 +14,7 @@ MEAN_SIMPLE_UNPREDICTED = 0.43
 
 
 def get_model_raw_info(
-    df, winrates, model, min_threshold=0.48, max_threshold=0.52, is_simple=True
+    df, winrates, model, min_threshold=0.48, max_threshold=0.52
 ):
     """
     Evaluates the performance of a model on a test dataset and returns a dictionary of hero picks and predictions.
@@ -27,7 +25,6 @@ def get_model_raw_info(
             model: A trained model for making predictions.
             min_threshold (float): The minimum threshold for a model's win probability prediction to be considered 'sure'.
             max_threshold (float): The maximum threshold for a model's win probability prediction to be considered 'sure'.
-            is_simple (bool): Whether to use a simple or nn model for making predictions.
 
         Returns:
             dict: A dictionary containing lists of hero picks and predictions for the test dataset.
@@ -51,12 +48,7 @@ def get_model_raw_info(
     incorrect = 0
 
     for i in range(len(df)):
-        if is_simple:
-            team_2_win_prob = get_simple_pred(
-                winrates, df.iloc[i]["TEAM_0_HEROES"], df.iloc[i]["TEAM_1_HEROES"]
-            )["pick_2"]
-        else:
-            team_2_win_prob = get_nn_pred(
+        team_2_win_prob = get_nn_pred(
                 winrates,
                 model,
                 df.iloc[i]["TEAM_0_HEROES"],
