@@ -1,9 +1,9 @@
+import pandas as pd
 import streamlit as st
 from data_processing.util import (
     read_heroes,
     get_hero_performance,
 )
-from parser.util import reshape_pick
 from data_processing.predict import get_prediction, get_parsed_data
 
 st.title("Dota 2 pick predictor")
@@ -15,33 +15,20 @@ st.write("----")
 3. After this you will see the prediction, at the bottom 
 ----
 
-## Prediction format
-To keep this simple, numbers you need to aim for more accurate prediction
-
-**RF Raw:**
-1. Top pick: 0.65<
-2. Bottom pick: 0.45>
-
-**RF Feedback:** 
-1. Top pick: 0.55<
-2. Bottom pick: 0.46>
-
-**XGB Raw:**
-1. Top pick: 0.80<
-2. Bottom pick: 0.20>
-
-**XGB Feedback:**
-1. Top pick: 0.53<
-2. Bottom pick: 0.47>
-
-**Meta:**
-1. Top pick: 0.51<
-2. Bottom pick: 0.49>
-
-
-Every match of these conditions will count as 1 point
-
 """
+
+def print_pred(data):
+    df = pd.DataFrame(data).T
+    df.reset_index(inplace=True)
+    df.rename(columns={'index': 'Model', 'pred': 'Prediction', 'target': 'Target'}, inplace=True)
+    return df.style.apply(highlight_cells, axis=1)
+
+def highlight_cells(x):
+    if 'Unpredicted Feedback' in x['Model']:
+        color = 'background-color: green' if x['Prediction'] < x['Target'] else ''
+    else:
+        color = 'background-color: green' if x['Prediction'] > x['Target'] else ''
+    return [color if col == 'Prediction' else '' for col in x.index]
 
 
 def print_hero_metric(index):
@@ -90,7 +77,7 @@ with tab1:
         st.header(f"{pred['pred_team']}")
         st.write(f"{pred['predicted_pick']}")
         st.write('----')
-        st.markdown(f' {pred["pred_result"]}')
+        st.dataframe(print_pred(pred['pred_dict']))
         st.write('----')
         st.header(f'Total scores: {pred["scores"]}')
         match_heroes = temp_dict[0]["pick"] + temp_dict[1]["pick"]
@@ -150,7 +137,14 @@ with tab2:
         r5 = st.selectbox("Radiant Position 5", heroes)
 
     if st.button("Predict", key=1):
-        st.write(get_prediction([d1, d2, d3, d4, d5], [r1, r2, r3, r4, r5])[0])
+
+        pred = get_prediction([d1, d2, d3, d4, d5], [r1, r2, r3, r4, r5])
+
+        st.write(f"{pred['predicted_pick']}")
+        st.write('----')
+        st.dataframe(print_pred(pred['pred_dict']))
+        st.write('----')
+        st.header(f'Total scores: {pred["scores"]}')
 
         match_heroes = [d1, d2, d3, d4, d5, r1, r2, r3, r4, r5]
         for h in range(len(match_heroes)):

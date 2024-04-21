@@ -137,13 +137,9 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     predicted_pick = pick_1 if row_prediction["rf"]["pick_1"] > 0.50 else pick_2
     predicted_team = team_1 if row_prediction['rf']['pick_1'] > 0.50 else team_2
     unpredicted_pick = pick_2 if row_prediction["rf"]["pick_1"] > 0.50 else pick_1
-    unpredicted_team = team_2 if row_prediction['rf']['pick_1'] > 0.50 else team_1
 
     predicted_pick_str = (
         "pick_1" if row_prediction["rf"]["pick_1"] > 0.50 else "pick_2"
-    )
-    unpredicted_pick_str = (
-        "pick_2" if row_prediction["rf"]["pick_1"] > 0.50 else "pick_1"
     )
 
     if (
@@ -161,58 +157,40 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     feedback_prediction = get_feedback_prediction(
         winrates, rf_feedback, xgb_feedback, rf_model, xgb_model, pick_1, pick_2)
 
-    if (
-            feedback_prediction["rf"]["predicted_winrate"]
-            >= hyper_params["predicted_feedback_threshold"]
-    ):
-        scores += 1
+    pred_feedback = round(
+        (feedback_prediction['rf']['predicted_winrate'] + feedback_prediction['xgb']['predicted_winrate']) / 2, 2)
+    unpred_feedback = round(
+        (feedback_prediction['rf']['unpredicted_winrate'] + feedback_prediction['xgb']['unpredicted_winrate']) / 2, 2)
 
-    if (
-            feedback_prediction["rf"]["unpredicted_winrate"]
-            <= hyper_params["unpredicted_feedback_threshold"]
-    ):
+    if pred_feedback >= 0.54:
         scores += 1
-
-    if (
-            feedback_prediction["xgb"]["predicted_winrate"]
-            >= hyper_params["predicted_feedback_threshold"]
-    ):
-        scores += 1
-
-    if (
-            feedback_prediction["xgb"]["unpredicted_winrate"]
-            <= hyper_params["unpredicted_feedback_threshold"]
-    ):
+    if unpred_feedback <= 0.45:
         scores += 1
 
     meta_prediction = get_meta_prediction(predicted_pick, unpredicted_pick)
     if meta_prediction[predicted_pick_str] >= hyper_params["meta_threshold"]:
         scores += 1
 
+    pred_dict = {'Random Forest': {'pred': row_prediction['rf'][predicted_pick_str], 'target': 0.65},
+                 'XGBoost': {'pred': row_prediction['xgb'][predicted_pick_str], 'target': 0.80},
+                 'Predicted Feedback': {'pred': pred_feedback, 'target': 0.54},
+                 'Unpredicted Feedback': {'pred': unpred_feedback, 'target': 0.45},
+                 'Meta': {'pred': meta_prediction[predicted_pick_str], 'target': 0.51}
+                 }
+
     predicted_result = "\t\t"
-    predicted_result += f"\n\n\t| RF Raw: {row_prediction['rf'][predicted_pick_str]} "
-    predicted_result += (
-        f"\n\n\t| RF Feedback: {feedback_prediction['rf']['predicted_winrate']}"
-    )
-    predicted_result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][predicted_pick_str]:.2f}"
-    predicted_result += f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['predicted_winrate']}"
-    predicted_result += f"\n\n\t| Meta: {meta_prediction[predicted_pick_str]}"
+    predicted_result += f"\n\n\t| RF Raw: {row_prediction['rf'][predicted_pick_str]} Target: (0.65<)"
+    predicted_result += f"\n\n\t| RF Feedback: {feedback_prediction['rf']['predicted_winrate']}\t:(0.54<)"
+    predicted_result += f"\n\n\t| RF Unpredicted Feedback:{feedback_prediction['rf']['unpredicted_winrate']}\t:(0.46>)"
 
+    predicted_result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][predicted_pick_str]:.2f}\t:(0.80<)"
+    predicted_result += f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['predicted_winrate']}\t:(0.54<)"
+    predicted_result += f"\n\n\t| XGB Unpredicted Feedback:{feedback_prediction['xgb']['unpredicted_winrate']}\t:(0.46>)"
 
-    unpredicted_result = "\t\t"
-    unpredicted_result += f"{unpredicted_team} |"
-    unpredicted_result += print_pick(unpredicted_pick)
-    unpredicted_result += f"\n\n\t| RF Raw: {row_prediction['rf'][unpredicted_pick_str]}"
-    unpredicted_result += f"\n\n\t| RF Feedback: {feedback_prediction['rf']['unpredicted_winrate']}"
-    unpredicted_result += f"\n\n\t| XGB Raw: {row_prediction['xgb'][unpredicted_pick_str]:.2f}"
-    unpredicted_result += (
-        f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['unpredicted_winrate']:.2f}"
-    )
-    unpredicted_result += f"\n\n\t| Meta: {meta_prediction[unpredicted_pick_str]}"
+    predicted_result += f"\n\n\t| Meta: {meta_prediction[predicted_pick_str]}\t:(0.51<)"
 
-
-    return {'pred_result': predicted_result, 'unpred_result': unpredicted_result, 'scores': scores,
-            'predicted_pick': predicted_pick, 'pred_team': predicted_team}
+    return {'pred_result': predicted_result, 'scores': scores, 'predicted_pick': predicted_pick,
+            'pred_team': predicted_team, 'pred_dict': pred_dict}
 
 
 def print_pick(pick):
