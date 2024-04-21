@@ -215,3 +215,4 @@ def read_match(file_name_to_save="test"):
     pos_reshape_csv(
         os.path.join("parser/generated_data", file_name_to_save), is_reshaped=True
     )
+
