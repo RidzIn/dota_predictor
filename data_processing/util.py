@@ -149,7 +149,6 @@ def get_hero_matchups(hero_name, pick):
 winrates = pd.read_json('data_processing/data/winrates/winrates.json')
 
 
-
 def get_hero_performance(hero, pick_1, pick_2):
     def detect_team(hero, pick_1, pick_2):
         return (pick_1, pick_2) if hero in pick_1 else (pick_2, pick_1)

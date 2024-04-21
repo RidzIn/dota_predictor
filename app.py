@@ -66,8 +66,13 @@ with tab1:
     """
     link = st.text_input("**Insert match link from [DLTV.ORG](https://dltv.org//)**")
 
+    option = st.selectbox("Map", (0, 1, 2, 3, 4, 5))
+
     if st.button("Predict", key=2):
-        temp_dict = get_parsed_data(link)
+        if option == 0:
+            temp_dict = get_parsed_data(link)
+        else:
+            temp_dict = get_parsed_data(link, live=False, map=option-1)
 
         pred = get_prediction(temp_dict[0]["pick"],
                               temp_dict[1]["pick"],

@@ -1,7 +1,8 @@
 from joblib import load
 
 from data_processing.util import *
-from parser.util import reshape_pick
+from parser.parse_match import MatchParser
+from parser.util import reshape_pick, reshaped_df, reshape_positions
 
 
 def get_nn_pred(winrates, model, pick_1, pick_2):
@@ -201,6 +202,64 @@ def print_pick(pick):
     return result
 
 
+def get_teams(response):
+    bottom_span = response.text.find('picks__new-picks')
+    top_span = response.text.find('picks__new-plus__placeholder')
+    span = response.text[bottom_span:top_span]
+    id_1 = span.find('https://dltv.org/teams/')
+    team_1 = span[id_1:id_1 + 100].split('"')[0]
+
+    id_2 = span[id_1 + 100:].find('https://dltv.org/teams/')
+    team_2 = span[id_1 + 100 + id_2: id_1 + id_2 + 500].split('"')[0]
+    team_1 = team_1.split("/")[-1]
+    team_2 = team_2.split("/")[-1]
+    return {'team_1': team_1, 'team_2': team_2}
+
+
+def get_data(df, map):
+    pick_data_1 = {'side': df.iloc[map]['TEAM_0_SIDE'], 'pick': df.iloc[map]['TEAM_0_HEROES'],
+                   'team': df.iloc[map]['TEAM_0_NAME']}
+
+    pick_data_2 = {'side': df.iloc[map]['TEAM_1_SIDE'], 'pick': df.iloc[map]['TEAM_1_HEROES'],
+                   'team': df.iloc[map]['TEAM_1_NAME']}
+    if df.iloc[map]['TEAM_0_SIDE'] == 'radiant':
+        return pick_data_1, pick_data_2
+    else:
+        return pick_data_2, pick_data_1
+
+
+def get_df(match_link):
+    mp = MatchParser(match_link=match_link)
+
+    match = mp.generate_csv_data_map()
+    my_data = []
+
+    match = match.split("\n")
+    for j in match:
+        if len(j) > 10:
+            my_data.append(j)
+
+    columns = [
+        "MATCH_ID",
+        "MAP",
+        "TOURNAMENT",
+        "TEAM",
+        "SIDE",
+        "SCORE",
+        "RESULT",
+        "DURATION",
+        "HERO_1",
+        "HERO_2",
+        "HERO_3",
+        "HERO_4",
+        "HERO_5",
+    ]
+
+    data = [list(i.replace(", ", "").split(",")) for i in my_data]
+    df = pd.DataFrame(data, columns=columns)
+    return reshaped_df(reshape_positions(df))
+
+
 def get_pick_data(bottom_span, response, heroes_list):
     pick_data = {'side': None, 'pick': [], 'team': None}
 
@@ -215,40 +274,30 @@ def get_pick_data(bottom_span, response, heroes_list):
     return pick_data
 
 
-def get_parsed_data(match_link):
-    response = requests.get(match_link)
-    teams = get_teams(response)
+def get_parsed_data(match_link, live=True, map=None):
+    if live:
+        response = requests.get(match_link)
+        teams = get_teams(response)
 
-    dire_span = response.text.find('<div class="picks__new-picks__picks dire">')
-    radiant_span = response.text.find('<div class="picks__new-picks__picks radiant">')
-    first_span = (dire_span, radiant_span) if dire_span < radiant_span else (radiant_span, dire_span)
+        dire_span = response.text.find('<div class="picks__new-picks__picks dire">')
+        radiant_span = response.text.find('<div class="picks__new-picks__picks radiant">')
+        first_span = (dire_span, radiant_span) if dire_span < radiant_span else (radiant_span, dire_span)
 
-    heroes_list = []
+        heroes_list = []
 
-    with open('parser/heroes.txt') as heroes:
-        for line in heroes:
-            heroes_list.append(line.strip())
+        with open('parser/heroes.txt') as heroes:
+            for line in heroes:
+                heroes_list.append(line.strip())
 
-    temp_1 = get_pick_data(first_span[0], response, heroes_list)
-    temp_1['team'] = teams['team_1']
-    temp_2 = get_pick_data(first_span[1], response, heroes_list)
-    temp_2['team'] = teams['team_2']
+        temp_1 = get_pick_data(first_span[0], response, heroes_list)
+        temp_1['team'] = teams['team_1']
+        temp_2 = get_pick_data(first_span[1], response, heroes_list)
+        temp_2['team'] = teams['team_2']
 
-    return (temp_1, temp_2) if temp_1['side'] == 'radiant' else (temp_2, temp_1)
-
-
-def get_teams(response):
-    bottom_span = response.text.find('picks__new-picks')
-    top_span = response.text.find('picks__new-plus__placeholder')
-    span = response.text[bottom_span:top_span]
-    id_1 = span.find('https://dltv.org/teams/')
-    team_1 = span[id_1:id_1 + 100].split('"')[0]
-
-    id_2 = span[id_1 + 100:].find('https://dltv.org/teams/')
-    team_2 = span[id_1 + 100 + id_2: id_1 + id_2 + 500].split('"')[0]
-    team_1 = team_1.split("/")[-1]
-    team_2 = team_2.split("/")[-1]
-    return {'team_1': team_1, 'team_2': team_2}
+        return (temp_1, temp_2) if temp_1['side'] == 'radiant' else (temp_2, temp_1)
+    else:
+        df = get_df(match_link)
+        return get_data(df, map)
 
 
 winrates = pd.read_json('data_processing/data/winrates/winrates.json')
