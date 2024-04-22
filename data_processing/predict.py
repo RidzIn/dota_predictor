@@ -223,9 +223,9 @@ def get_data(df, map):
     pick_data_2 = {'side': df.iloc[map]['TEAM_1_SIDE'], 'pick': df.iloc[map]['TEAM_1_HEROES'],
                    'team': df.iloc[map]['TEAM_1_NAME']}
     if df.iloc[map]['TEAM_0_SIDE'] == 'radiant':
-        return pick_data_1, pick_data_2
-    else:
         return pick_data_2, pick_data_1
+    else:
+        return pick_data_1, pick_data_2
 
 
 def get_df(match_link):
@@ -294,7 +294,7 @@ def get_parsed_data(match_link, live=True, map=None):
         temp_2 = get_pick_data(first_span[1], response, heroes_list)
         temp_2['team'] = teams['team_2']
 
-        return (temp_1, temp_2) if temp_1['side'] == 'radiant' else (temp_2, temp_1)
+        return (temp_2, temp_1) if temp_1['side'] == 'radiant' else (temp_1, temp_2)
     else:
         df = get_df(match_link)
         return get_data(df, map)
