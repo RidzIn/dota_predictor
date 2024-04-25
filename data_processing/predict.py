@@ -168,16 +168,17 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     if unpred_feedback <= 0.45:
         scores += 1
 
-    meta_prediction = get_meta_prediction(predicted_pick, unpredicted_pick)
-    if meta_prediction[predicted_pick_str] >= hyper_params["meta_threshold"]:
-        scores += 1
+    # meta_prediction = get_meta_prediction(predicted_pick, unpredicted_pick)
+    # if meta_prediction[predicted_pick_str] >= hyper_params["meta_threshold"]:
+    #     scores += 1
 
     pred_dict = {'Random Forest': {'pred': row_prediction['rf'][predicted_pick_str], 'target': 0.65},
                  'XGBoost': {'pred': row_prediction['xgb'][predicted_pick_str], 'target': 0.80},
                  'Predicted Feedback': {'pred': pred_feedback, 'target': 0.54},
                  'Unpredicted Feedback': {'pred': unpred_feedback, 'target': 0.45},
-                 'Meta': {'pred': meta_prediction[predicted_pick_str], 'target': 0.51}
+                 #'Meta': {'pred': meta_prediction[predicted_pick_str], 'target': 0.51
                  }
+
 
     predicted_result = "\t\t"
     predicted_result += f"\n\n\t| RF Raw: {row_prediction['rf'][predicted_pick_str]} Target: (0.65<)"
@@ -188,7 +189,7 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     predicted_result += f"\n\n\t| XGB Feedback: {feedback_prediction['xgb']['predicted_winrate']}\t:(0.54<)"
     predicted_result += f"\n\n\t| XGB Unpredicted Feedback:{feedback_prediction['xgb']['unpredicted_winrate']}\t:(0.46>)"
 
-    predicted_result += f"\n\n\t| Meta: {meta_prediction[predicted_pick_str]}\t:(0.51<)"
+    # predicted_result += f"\n\n\t| Meta: {meta_prediction[predicted_pick_str]}\t:(0.51<)"
 
     return {'pred_result': predicted_result, 'scores': scores, 'predicted_pick': predicted_pick,
             'pred_team': predicted_team, 'pred_dict': pred_dict}
