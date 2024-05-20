@@ -11,13 +11,16 @@ MATCH_COUNT = 0
 
 
 class MatchParser:
-    def __init__(self, match_file_path=None, match_link=None):
+    def __init__(self, match_file_path=None, match_link=None, match_string=None):
         if match_file_path is not None:
             with open(match_file_path, encoding="utf-8") as match_file:
                 self.data_match = match_file.readlines()
+        elif match_string:
+            self.data_match = match_string
         else:
             response = requests.get(match_link)
             temp = response.text
+
             self.data_match = temp.splitlines()
 
             print(len(self.data_match))

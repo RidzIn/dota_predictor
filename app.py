@@ -1,3 +1,5 @@
+import json
+
 import pandas as pd
 import streamlit as st
 from data_processing.util import (
@@ -16,6 +18,33 @@ st.write("----")
 ----
 
 """
+
+f = open("data_processing/data/heroes/heroes_decoder.json")
+heroes_id_names = json.load(f)
+
+
+def get_match_picks(match_id):
+    response = requests.get(f'https://api.opendota.com/api/matches/{match_id}')
+
+    radiant_picks = [pick["hero_id"] for pick in response.json()['picks_bans'] if pick["is_pick"] and pick["team"] == 0]
+    dire_picks = [pick["hero_id"] for pick in response.json()['picks_bans'] if pick["is_pick"] and pick["team"] == 1]
+
+    radiant_picks_decode = []
+    dire_picks_decode = []
+    for id in radiant_picks:
+        for key, value in heroes_id_names.items():
+            if int(key) == int(id):
+                radiant_picks_decode.append(value)
+                break
+
+    for id in dire_picks:
+        for key, value in heroes_id_names.items():
+            if int(key) == int(id):
+                dire_picks_decode.append(value)
+                break
+
+    return {"dire": dire_picks_decode, 'radiant': radiant_picks_decode,
+            "dire_team": response.json()['dire_team']['name'], 'radiant_team': response.json()['radiant_team']['name']}
 
 
 def print_pred(data):
@@ -37,8 +66,8 @@ def print_hero_metric(index):
     st.sidebar.header(match_heroes[index])
     hero_perf = get_hero_performance(
         match_heroes[index],
-        temp_dict[0]["pick"],
-        temp_dict[1]["pick"],
+        temp_dict["dire"],
+        temp_dict["radiant"],
     )[match_heroes[index]]
 
     with_perf = round(hero_perf["with"] * 100, 2)
@@ -65,25 +94,21 @@ st.header("Predict")
 ----
 """
 
-tab1, tab2 = st.tabs(['Link', 'Manual'])
+tab1, tab2, tab3 = st.tabs(['Link', 'Manual', 'Match_ID'])
+
 
 with tab1:
-    link = st.text_input("**Insert match link from [DLTV.ORG](https://dltv.org//)**")
+    match_id = st.number_input(label="Put match id")
 
-    option = st.selectbox("Map", (0, 1, 2, 3, 4, 5))
 
     if st.button("Predict", key=2):
-        if option == 0:
-            temp_dict = get_parsed_data(link)
-            st.write(requests.get(link).text)
-            st.write(temp_dict)
-        else:
-            temp_dict = get_parsed_data(link, live=False, map=option - 1)
+        temp_dict = get_match_picks(int(match_id))
 
-        pred = get_prediction(temp_dict[0]["pick"],
-                              temp_dict[1]["pick"],
-                              temp_dict[0]['team'],
-                              temp_dict[1]['team'])
+        pred = get_prediction(temp_dict["dire"],
+                              temp_dict["radiant"],
+                              temp_dict['dire_team'],
+                              temp_dict['radiant_team'])
+
 
         st.header(f"{pred['pred_team']}")
         st.write(f"{pred['predicted_pick']}")
@@ -91,16 +116,16 @@ with tab1:
         st.dataframe(print_pred(pred['pred_dict']))
         st.write('----')
         st.header(f'Total scores: {pred["scores"]}')
-        match_heroes = temp_dict[0]["pick"] + temp_dict[1]["pick"]
+        match_heroes = temp_dict["dire"] + temp_dict["radiant"]
 
         for h in range(len(match_heroes)):
             if h == 0:
                 st.sidebar.write("----")
-                st.sidebar.title(temp_dict[0]["team"])
+                st.sidebar.title(temp_dict["dire_team"])
                 st.sidebar.write("----")
             if h == 5:
                 st.sidebar.write("----")
-                st.sidebar.title(temp_dict[1]["team"])
+                st.sidebar.title(temp_dict["radiant_team"])
                 st.sidebar.write("----")
             print_hero_metric(h)
 
@@ -167,3 +192,6 @@ with tab2:
                 st.sidebar.write("----")
                 st.sidebar.title("team_2")
                 st.sidebar.write("----")
+
+with tab3:
+    pass

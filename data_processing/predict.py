@@ -176,7 +176,7 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
                  'XGBoost': {'pred': row_prediction['xgb'][predicted_pick_str], 'target': 0.80},
                  'Predicted Feedback': {'pred': pred_feedback, 'target': 0.54},
                  'Unpredicted Feedback': {'pred': unpred_feedback, 'target': 0.45},
-                 #'Meta': {'pred': meta_prediction[predicted_pick_str], 'target': 0.51
+                 #'Meta': {'pred': meta_prediction[predicted_pick_str], 'target': 0.51}
                  }
 
 
@@ -230,7 +230,7 @@ def get_data(df, map):
 
 
 def get_df(match_link):
-    mp = MatchParser(match_link=match_link)
+    mp = MatchParser(match_string=match_link)
 
     match = mp.generate_csv_data_map()
     my_data = []
