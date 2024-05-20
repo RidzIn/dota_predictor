@@ -155,6 +155,7 @@ def get_prediction(pick_1, pick_2, team_1=None, team_2=None):
     ):
         scores += 1
 
+
     feedback_prediction = get_feedback_prediction(
         winrates, rf_feedback, xgb_feedback, rf_model, xgb_model, pick_1, pick_2)
 
