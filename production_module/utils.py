@@ -1,52 +1,8 @@
-import json
-
+import numpy as np
 import pandas as pd
-import requests
+from autogluon.tabular import TabularPredictor
+from rich import print as pp
 
-
-def read_heroes(file_name="data_processing/data/heroes/heroes.txt"):
-    """
-    Take txt file of heroes and return set object
-    """
-    hero_set = set()
-    with open(file_name, "r") as file:
-        for line in file:
-            hero_set.add(line.strip())
-    return hero_set
-
-
-def read_winrates(file_name="data_processing/data/winrates/winrates.json"):
-    """Return winrates dictionary"""
-    f = open(file_name)
-    winrates = json.load(f)
-    return winrates
-
-
-def read_hero_decoder(file_name="data_processing/data/heroes/heroes_decoder.json"):
-    """Return hero decoder json object"""
-    f = open(file_name)
-    decoder = json.load(f)
-    return decoder
-
-
-def read_xgb_model():
-    return pd.read_pickle("data_processing/data/models/xgboost_model.pkl")
-
-
-def read_simple_feedback(
-    file_name="data_processing/data/models_feedback/simple_model_stat.json",
-):
-    f = open(file_name)
-    feedback = json.load(f)
-    return feedback
-
-
-def read_xgb_feedback(
-    file_name="data_processing/data/models_feedback/xgb_model_stat.json",
-):
-    f = open(file_name)
-    feedback = json.load(f)
-    return feedback
 
 
 def get_feature_vec(winrates: dict, pick_1: list, pick_2: list) -> list:
@@ -128,43 +84,40 @@ def get_duel_features(winrates: dict, pick_1: list, pick_2: list) -> tuple:
     return duel_features1, duel_features2
 
 
-def get_hero_matchups(hero_name, pick):
-    heroes_id_names = read_hero_decoder()
-    for key, value in heroes_id_names.items():
-        if value == hero_name:
-            hero_key = key
-            break
 
-    response = requests.get(f"https://api.opendota.com/api/heroes/{hero_key}/matchups")
+predictor = TabularPredictor.load('AutogluonModels/production')
 
-    data = json.loads(response.text)
-    temp_df = pd.DataFrame(data)
-    temp_df["winrate"] = round(temp_df["wins"] / temp_df["games_played"], 2)
+winrates = pd.read_json('..\\data_processing\\data\\winrates\\updated_winrates.json')
 
-    temp_df["name"] = [heroes_id_names[str(i)] for i in temp_df["hero_id"]]
-    temp_df = temp_df[temp_df["name"].isin(pick)]
-    return temp_df
+model_to_use = ['KNeighborsUnif_BAG_L1', 'RandomForest_r16_BAG_L1', 'LightGBMLarge_BAG_L1', 'XGBoost_r194_BAG_L1']
+
+# for model_name in model_to_use:
+#     model_pred = round(predictor.predict_proba(X_test_df, model=model_name)[1].iloc[0], 2)
+#     print("Prediction from %s model: %s" % (model_name, model_pred))
 
 
-winrates = pd.read_json('../data_processing/data/winrates/updated_winrates.json')
+def predict_v2(dire_pick, radiant_pick):
+
+    result_dict = {'dire': dire_pick, 'radiant': radiant_pick}
+
+    arr = np.array(get_feature_vec(winrates, pick_1=dire_pick,
+                                   pick_2=radiant_pick))
+
+    arr = arr.reshape(1, -1)
+
+    Features_df = pd.DataFrame(arr, columns=[f'Feature_{i + 1}' for i in range(80)])
+
+    for model_name in model_to_use:
+        model_pred = round(predictor.predict_proba(Features_df, model=model_name)[1].iloc[0], 2)
+        # print("Prediction from %s model: %s" % (model_name, model_pred))
+        result_dict[model_name] = model_pred
+
+    return result_dict
 
 
-def get_hero_performance(hero, pick_1, pick_2):
-    def detect_team(hero, pick_1, pick_2):
-        return (pick_1, pick_2) if hero in pick_1 else (pick_2, pick_1)
+pick_1=['Troll Warlord', 'Windranger', 'Slardar', 'Muerta', 'Batrider']
+pick_2=['Juggernaut', 'Leshrac', 'Legion Commander', 'Gyrocopter', 'Crystal Maiden']
 
-    team_pick, enemy_pick = detect_team(hero, pick_1, pick_2)
-    with_perm = 0
-    against_perm = 0
-    for h in team_pick:
-        with_perm += winrates[hero][h]["with_winrate"]
-    for h in enemy_pick:
-        against_perm += winrates[hero][h]["against_winrate"]
-    print(with_perm, against_perm)
-    return {
-        hero: {
-            "with": with_perm / 5,
-            "against": against_perm / 5,
-            "total": (with_perm + against_perm) / 10,
-        }
-    }
+
+pp(predict_v2(dire_pick=pick_1, radiant_pick=pick_2))
+

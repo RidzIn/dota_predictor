@@ -120,7 +120,7 @@ def get_heroes_list():
         FileNotFoundError: If the 'parser/heroes.txt' file does not exist.
     """
     try:
-        with open("parser/heroes.txt", "r") as f:
+        with open("heroes.txt", "r") as f:
             lines = f.readlines()
         hero_names = [line.strip() for line in lines]
         return hero_names
@@ -142,7 +142,7 @@ def read_heroes_prior():
     """
     try:
         hero_prior_dict = {}
-        with open("parser/heroes_prior.txt", "r") as f:
+        with open("heroes_prior.txt", "r") as f:
             lines = f.readlines()
 
         for i in range(len(lines)):
@@ -317,3 +317,11 @@ def reshape_positions(df):
     df["HERO_5"] = pos_5
 
     return df
+
+
+# data = pd.read_csv("../full_matches.csv")
+# data = reshape_positions(data)
+# new_data = reshape_pick(data)
+
+pos_reshape_csv("../data_processing/data/datasets/full_matches.csv")
+
