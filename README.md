@@ -2,6 +2,8 @@
 
 ----
 
+**NOTE:** The code is deprecated, a new version is here: https://github.com/RidzIn/dota_predictor_v2
+
 The project will help you decide which pick is better in Dota2 matches. 
 
 Contains 2 modules and the StreamLit app. 
